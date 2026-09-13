@@ -144,13 +144,27 @@ pip install -r requirements.txt
 
 ### 3. Configure environment variables
 
-A typical local configuration uses a SQLite database by default. The project also supports an override with the DATABASE_URL environment variable.
-
-Example:
+A typical local configuration uses SQLite by default. You can override it with `DATABASE_URL` if needed.
 
 ```bash
+# Windows PowerShell
+$env:DATABASE_URL = "sqlite:///data/timeline.db"
+
+# Linux/macOS
 export DATABASE_URL=sqlite:///data/timeline.db
 ```
+
+For live Twitter ingest, add your bearer token:
+
+```bash
+# Windows PowerShell
+$env:TWITTER_BEARER_TOKEN = "your_bearer_token_here"
+
+# Linux/macOS
+export TWITTER_BEARER_TOKEN=your_bearer_token_here
+```
+
+You can also use `TWITTER_BEARER` as an alias; the project supports both.
 
 ### 4. Initialize the database
 
@@ -164,18 +178,26 @@ python scripts/init_db.py
 uvicorn api.main:app --reload
 ```
 
-The API documentation is available at:
+The API docs are available at:
 
 - http://localhost:8000/api/docs
 - http://localhost:8000/api/redoc
 
-### 6. Run the Flask dashboard
+### 6. Run the local Flask dashboard
 
 ```bash
 python webapp/app.py
 ```
 
-### 7. Run tests
+### 7. Run the real-time Twitter stream
+
+```bash
+python scripts/collect_twitter.py --keywords "#AI" "#python" "#datascience"
+```
+
+This script listens for matching tweets and stores them through the project’s ingestion pipeline.
+
+### 8. Run tests
 
 ```bash
 pytest -q
@@ -183,7 +205,7 @@ pytest -q
 
 ## Validation status
 
-The current test suite is passing in the repository after dependency and compatibility fixes:
+The current test suite is passing:
 
 ```bash
 pytest -q
@@ -193,12 +215,13 @@ Result: 16 passed.
 
 ## Roadmap and current maturity
 
-This project is currently a working local analytics starter rather than a fully production-ready social intelligence platform. The strongest implemented pieces are:
+This project is currently a working local analytics starter rather than a fully production-ready platform. The strongest implemented pieces are:
 
 - collector abstraction and event normalization
 - SQLAlchemy-backed storage and deduplication
 - sentiment analysis and summary logic
 - API endpoints and dashboard integration
+- realtime Twitter stream ingestion
 
 Planned next steps include:
 
@@ -210,7 +233,9 @@ Planned next steps include:
 
 ## Notes
 
-The README was deliberately aligned to the actual code in this repo so that it reflects the implemented state accurately rather than the broader original vision alone.
+The README reflects the actual code in this repo and the live ingestion path now available in the project.
+
+## Sapphire team
 
 | Member | Role | Contributions |
 | --- | --- | --- |
@@ -219,32 +244,36 @@ The README was deliberately aligned to the actual code in this repo so that it r
 | Mohammed Shoaib Khan | Core Developer | Backend, logic, and reliability engineering |
 | Aayat Nizam | Concept Spark · Design | Ideation, aesthetic direction, user-experience polish |
 
-### ◆ About Sapphire
+### About Sapphire
 
-Syntra is a product of Sapphire — a close-knit team of innovators, learners, and creators from the CS-AIML Department in Hyderabad, India.
+Syntra is a project built by Sapphire, a close-knit team of innovators, learners, and creators from the CS-AIML Department in Hyderabad, India.
 
-Founded in 2024 from a single spark, Sapphire has grown into a movement that builds what doesn't exist yet — and refines what does.
+Founded in 2024 from a single spark, Sapphire focuses on creating what does not exist yet and refining what does.
 
 ```txt
 Building the Future, One Project at a Time.
 ```
 
- 🧭 Our Vision To grow beyond college and create a meaningful venture in tech, education, and multi-domain creative projects — avoiding traditional corporate routes, and building a strong identity through hackathons, workshops, and events.
+### Vision
 
-🎯 Our Goal Build a portfolio of impactful projects and create opportunities for each member to contribute based on their strengths and grow together.
+To grow beyond college and create meaningful work in tech, education, and multi-domain creative projects.
 
-💠 Our Values
+### Goal
 
-🚀 Innovation First — We build what doesn't exist yet.
-🤝 Collaboration — Every member's strength is a piece of the Sapphire whole.
-💡 Authenticity — No corporate masks, just real people building real things.
+To build a portfolio of impactful projects and help each team member contribute based on their strengths.
 
-## 📬 Connect With Us
+### Values
+
+- Innovation First
+- Collaboration
+- Authenticity
+
+## Connect with us
 
 | Channel | Link |
 | --- | --- |
-| 🌐 Website | shards-of-sapphire.github.io/Webpage |
-| 💻 GitHub | github.com/Shards-Of-Sapphire |
-| 📧 Email | shardsofsapphire.org@gmail.com |
-| 📍 Location | Hyderabad, Telangana, India |
+| Website | shards-of-sapphire.github.io/Webpage |
+| GitHub | github.com/Shards-Of-Sapphire |
+| Email | shardsofsapphire.org@gmail.com |
+| Location | Hyderabad, Telangana, India |
 
