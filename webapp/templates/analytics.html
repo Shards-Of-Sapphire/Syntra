@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section id="analytics">
+        <h1>Analytics Dashboard</h1>
+        <div id="events">
+            {% for event in events %}
+                <div class="event">
+                    <h2>{{ event.platform }} - {{ event.created_at }}</h2>
+                    <p>{{ event.text }}</p>
+                    <p>Sentiment: {{ event.sentiment }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}
