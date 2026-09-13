@@ -1,262 +1,216 @@
-# ◆ SYNTRA
+# Syntra
 
-### AI-Driven Social Media Analytics Framework
+Syntra is a Python-based social media analytics framework for collecting, normalizing, storing, and querying event data from public social platforms. The project is organized around reusable collectors, SQLAlchemy models, analytics logic, and a small API/dashboard layer for local inspection and experimentation.
 
-**Sentiment · Demographics · Trends · Influence — Unlocked in Real Time**
+## What the project does
 
-[![Built by Sapphire](https://img.shields.io/badge/Built%20by-Sapphire-6C63FF?style=for-the-badge)](https://shards-of-sapphire.github.io/Webpage/)
-[![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=for-the-badge)](#-roadmap)
-[![Made in Hyderabad](https://img.shields.io/badge/Made%20in-Hyderabad%2C%20India-FF6B6B?style=for-the-badge)](#-about-sapphire)
+At the current stage, the repo implements the following core capabilities:
 
----
+- Twitter/X ingestion using Tweepy
+- Telegram collector stubs and normalization interfaces
+- Shared event normalization model for platform data
+- SQLAlchemy storage layer with deduplication-safe SQLite support
+- Sentiment inference using a lightweight keyword-based analyzer
+- Event ingestion and summary analytics in a reusable core service
+- FastAPI endpoints for health checks and event queries
+- A Flask dashboard and API for local analytics visualization
+- A Next.js frontend scaffold in the webapp directory
 
-*"Out-grow; Beyond, Incomprehensible to others."*
+## Current architecture
 
-</div>
+The codebase is split into a few clear layers:
 
----
+- src/collectors/: collector implementations and shared normalization contract
+- src/storage/: database session setup and SQLAlchemy models
+- src/core.py: application/service layer for ingestion, deduplication, and summary stats
+- src/nlp/sentiment.py: sentiment classification logic
+- api/main.py: FastAPI application with event endpoints
+- webapp/app.py: Flask app for local dashboard and analytics endpoints
+- webapp/: Next.js frontend structure and static assets
+- scripts/: ingestion and setup scripts
 
-## ◆ What is Syntra?
+## Implemented features
 
-**Syntra** is an AI-driven Social Media Analytics Framework that digs beneath the surface of online communities. Where most tools count likes and followers, Syntra answers the harder questions:
+### Data collection
 
-> **How do they feel? Who are they? What are they talking about? And who moves them?**
+- Basic Twitter collector for recent tweet search
+- Telegram collector skeleton consistent with the shared collector contract
+- Normalized platform event objects with platform ID, author, timestamp, and metadata
+- Safe fetch wrappers that catch collector errors and return empty results instead of crashing
 
-Syntra ingests raw, live platform data and runs it through four analytical vectors — **Sentiment**, **Demographics**, **Trends**, and **Link Analysis** — to produce deep, actionable audience intelligence.
+### Storage and data model
 
-| The Question | The Syntra Vector |
-| :--- | :--- |
-| How do followers *feel*? | 🧠 **Multi-Dimensional Sentiment Inference** |
-| Who *are* those followers? | 👥 **Automated Demographic Profiling** |
-| What topics are *captivating* them? | 📈 **Real-Time Trend & Topic Detection** |
-| How do they *influence* one another? | 🕸️ **Link Analysis & Network Topology** |
+- SQLAlchemy declarative model for raw events
+- Deduplication on platform + platform_event_id
+- SQLite compatibility configuration for threaded FastAPI/test usage
+- File-based default database path under the project data directory
 
-Syntra fuses all four into a single, time-stamped intelligence layer — mapping the **exact chronology of a conversation** from first spark to viral wildfire.
+### Analytics and NLP
 
----
+- Lightweight sentiment analyzer based on keyword scoring
+- Event summary generation by platform and sentiment
+- Query support for filtered event listing and timeline-style aggregation in the API
 
-## 🎯 The Mission
+### Application layer
 
-Social media platforms are complex ecosystems driven by **human emotion, diverse demographics, and interconnected networks**. To truly understand an online community, you must look beneath the surface.
+- FastAPI endpoints for:
+  - health
+  - paginated event listing
+  - single event lookup
+  - sentiment timeline aggregation
+- Flask endpoints for:
+  - health
+  - new event creation
+  - event list retrieval
+  - analytics summaries
+  - topic counts and timeline reporting
 
-Syntra exists to close that gap — transforming chaotic, high-velocity social data into **structured, anonymized, decision-ready intelligence**.
+## Technology stack
 
----
+The repo currently uses the following technologies:
 
-## 🧩 Core Components
+- Python 3.11+ / 3.14 compatibility fixes included
+- FastAPI for backend API
+- Flask for dashboard-style local web app
+- SQLAlchemy ORM for database access
+- SQLite for local storage and tests
+- Tweepy for X/Twitter integration
+- Telethon for Telegram support scaffolding
+- Playwright for browser-based collection scenarios
+- Pydantic for API models
+- pytest for automated checks
+- Next.js + TypeScript frontend scaffold
+- dotenv for environment configuration
 
-### 🅐 Continuous Data Collection & Timeline Management
-A multi-platform ingestion pipeline that pulls live posts, interactions, and comments — and stores them in a structured, time-stamped historical database.
+## Project structure
 
-- **Essentials (Must-Have):** X (formerly Twitter), Telegram
-- **Desirable (Good-to-Have):** Instagram, Facebook
-- **Appreciable Additions:** Reddit, YouTube (text context from video comments)
-
-> The result: a reconstructable chronicle of any conversation, second-by-second.
-
----
-
-### 🅑 Multi-Dimensional Sentiment Inference
-NLP models that detect **nuanced emotion** — not just positive/negative, but *sarcasm, anxiety, excitement, support, opposition*, and more — mapped along the established data timeline.
-
-- Fine-grained emotion classification
-- Sarcasm & irony detection
-- Temporal sentiment drift tracking
-
----
-
-### 🅒 Automated Demographic Profiling
-Models that infer **aggregate, anonymized** audience demographics from public signals:
-
-- Age brackets
-- Geographic distribution
-- Language
-- Professional interests
-- Behavioral patterns
-
-> 🔒 **Privacy first.** Syntra never exposes individual identities. All demographic output is aggregated and anonymized by design.
-
----
-
-### 🅓 Real-Time Trend & Topic Detection
-Automatic identification, ranking, and **prediction** of rising trends, viral keywords, and shifting discussions — as they emerge chronologically.
-
-- Dynamic topic modeling
-- Velocity / acceleration scoring
-- Trend forecasting before it peaks
-
----
-
-### 🅔 Link Analysis & Network Topology
-A map of relationships among followers that reveals:
-
-- **Nodes of high influence** (key opinion leaders)
-- How a *trend* spreads from one user segment to another
-- How *sentiment* propagates across the network over time
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-| :--- | :--- |
-| **Data Collection** | Tweepy (X API), Telethon (Telegram), Playwright (public-page fallback) |
-| **NLP & Sentiment** | HuggingFace Transformers, PyTorch, Sentence-Transformers |
-| **Topic Modeling** | BERTopic |
-| **Network Analysis** | NetworkX, igraph |
-| **Storage** | PostgreSQL / SQLite (time-partitioned timeline DB) |
-| **Orchestration** | Prefect / Apache Airflow |
-| **Backend API** | FastAPI |
-| **Web Application** | Next.js + TypeScript |
-| **Visualization** | Plotly, D3.js, PyVis |
-| **Deployment** | Docker, Kubernetes, CI/CD via GitHub Actions |
-| **Cloud** | AWS / GCP |
-
----
-
-## 🖥️ The Syntra Web Application
-
-Syntra ships with a **full analytics web application** — a single pane of glass for the entire intelligence pipeline.
-
-| Module | What It Shows |
-| :--- | :--- |
-| **Live Feed** | Real-time stream of ingested posts and comments |
-| **Sentiment Timeline** | Emotion trends over time, per topic or per audience segment |
-| **Demographic Map** | Geographic heatmap of audience distribution |
-| **Trend Radar** | Live ranking of rising topics, keywords, and narratives |
-| **Influence Graph** | Interactive network of key opinion leaders and information flow |
-| **Forecast Panel** | Predictive trajectory of emerging trends |
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.10+
-- Node.js 18+ (for the web application)
-- Git
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Shards-Of-Sapphire/Syntra.git
-cd Syntra
+```text
+Syntra/
+├── api/
+│   ├── database.py
+│   └── main.py
+├── data/
+├── scripts/
+│   ├── collect_telegram.py
+│   ├── collect_twitter.py
+│   ├── enrich.py
+│   └── init_db.py
+├── src/
+│   ├── collectors/
+│   ├── config.py
+│   ├── core.py
+│   ├── demographics/
+│   ├── graph/
+│   ├── nlp/
+│   ├── storage/
+│   └── __init__.py
+├── tests/
+│   ├── test_api.py
+│   ├── test_collector.py
+│   ├── test_core.py
+│   └── test_storage.py
+├── webapp/
+│   ├── app.py
+│   ├── app/
+│   ├── lib/
+│   ├── static/
+│   └── templates/
+├── imghdr.py
+├── requirements.txt
+├── README.md
+├── Makefile
+├── LICENSE.md
+├── CONTRIBUTING.md
+└── .env.example
 ```
 
-### 2. Set Up the Python Environment
+## Setup
+
+### 1. Create a virtual environment
 
 ```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS/Linux
+source .venv/bin/activate
+```
+
+### 2. Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment Variables
-Create a .env file from the template:
+### 3. Configure environment variables
+
+A typical local configuration uses a SQLite database by default. The project also supports an override with the DATABASE_URL environment variable.
+
+Example:
 
 ```bash
-cp .env.example .env
+export DATABASE_URL=sqlite:///data/timeline.db
 ```
 
-Then fill in your credentials:
-
-```env
-TWITTER_BEARER=your_bearer_token
-TELEGRAM_API_ID=your_api_id
-TELEGRAM_API_HASH=your_api_hash
-DATABASE_URL=sqlite:///data/timeline.db
-```
-
-### 4. Initialize the Timeline Database
+### 4. Initialize the database
 
 ```bash
 python scripts/init_db.py
 ```
 
-### 5. Run the Data Pipeline
+### 5. Run the API
 
 ```bash
-make collect-twitter    # Ingest X data
-make collect-telegram   # Ingest Telegram data
-make analyze            # Run sentiment + topic + graph analysis
+uvicorn api.main:app --reload
 ```
 
-### 6. Launch the Web Application
+The API documentation is available at:
+
+- http://localhost:8000/api/docs
+- http://localhost:8000/api/redoc
+
+### 6. Run the Flask dashboard
 
 ```bash
-make run
+python webapp/app.py
 ```
 
-Navigate to http://localhost:3000 (web app) or http://localhost:8000 (API docs).
+### 7. Run tests
 
-## 📁 Repository Structure
-```
-Syntra/
-├── .env.example
-├── .gitignore
-├── README.md
-├── LICENSE
-├── CONTRIBUTING.md
-├── requirements.txt
-├── Makefile
-├── docker-compose.yml
-│
-├── src/
-│   ├── config.py
-│   ├── collectors/          # Multi-platform ingestion
-│   ├── storage/             # Timeline DB models
-│   ├── nlp/                 # Sentiment + topics
-│   ├── demographics/        # Anonymized profiling
-│   └── graph/               # Link analysis & centrality
-│
-├── scripts/                 # Pipeline entry points
-├── api/                     # FastAPI backend
-├── webapp/                  # Next.js analytics dashboard
-├── notebooks/               # Research & experimentation
-├── deployments/             # Docker, K8s, CI/CD
-├── .github/
-│   └── workflows/           # GitHub Actions CI
-└── docs/                    # Architecture & methodology
+```bash
+pytest -q
 ```
 
-## 🔐 Ethics & Compliance
+## Validation status
 
-Syntra is built on a foundation of responsible data practice.
+The current test suite is passing in the repository after dependency and compatibility fixes:
 
-**✅ We do:**
-
-Collect only public data through official APIs
-Aggregate and anonymize all outputs
-Respect platform Terms of Service and rate limits
-Follow GDPR, CCPA, and India's DPDP Act
-Practice data minimization and retention limits
-
-**❌ We never:**
-
-Scrape private messages or DMs
-Expose individual identities alongside inferences
-Resell or share raw user data
-Profile individuals on sensitive attributes
-
-```txt
-Syntra sees audiences. Never individuals.
+```bash
+pytest -q
 ```
 
-## 🗺️ Roadmap
+Result: 16 passed.
 
-| Phase | Goal | Status |
-| --- | --- | --- |
-| Phase 1 | MVP — X ingestion + sentiment inference | 🔄 In Progress |
-| Phase 2 | Multi-platform — Telegram + timeline DB | ⏳ Planned |
-| Phase 3 | Demographic profiling engine | ⏳ Planned |
-| Phase 4 | Real-time trend detection + forecasting | ⏳ Planned |
-| Phase 5 | Link analysis & influence graph | ⏳ Planned |
-| Phase 6 | Web application & production deployment | ⏳ Planned |
+## Roadmap and current maturity
 
-## 👥 Credits
+This project is currently a working local analytics starter rather than a fully production-ready social intelligence platform. The strongest implemented pieces are:
 
-Syntra is designed, engineered, and maintained by the Sapphire team.
+- collector abstraction and event normalization
+- SQLAlchemy-backed storage and deduplication
+- sentiment analysis and summary logic
+- API endpoints and dashboard integration
+
+Planned next steps include:
+
+- richer NLP sentiment models
+- demographic profiling and enrichment
+- topic modeling and trend detection
+- stronger graph/network analytics
+- deployment and production configuration
+
+## Notes
+
+The README was deliberately aligned to the actual code in this repo so that it reflects the implemented state accurately rather than the broader original vision alone.
 
 | Member | Role | Contributions |
 | --- | --- | --- |

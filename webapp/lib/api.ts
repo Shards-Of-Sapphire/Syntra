@@ -7,13 +7,15 @@ export type Summary = {
 export type EventRecord = {
   id: number;
   platform: string;
-  external_id: string | null;
-  author_name: string | null;
+  platform_event_id: string | null;
+  author_handle: string | null;
+  author_name?: string | null;
   text: string;
   created_at: string | null;
-  sentiment: "positive" | "neutral" | "negative" | null;
-  sentiment_score: number | null;
-  metadata: Record<string, unknown>;
+  sentiment: "positive" | "neutral" | "negative" | string | null;
+  sentiment_dominant?: string | null;
+  sentiment_score?: number | null;
+  metadata?: Record<string, unknown>;
 };
 
 export type TimelinePoint = {

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import func, select
@@ -38,24 +38,33 @@ class SyntraCore:
             existing = self.session.scalar(
                 select(RawEvent).where(
                     RawEvent.platform == platform,
-                    RawEvent.external_id == external_id,
+                    RawEvent.platform_event_id == external_id,
                 )
             )
             if existing:
                 return existing
 
         result = self.sentiment_analyzer.analyze(text)
+        dominant = max(result, key=result.get)
+        if dominant in {"joy", "surprise"}:
+            sentiment_label = "positive"
+        elif dominant in {"sadness", "anger", "fear", "disgust"}:
+            sentiment_label = "negative"
+        else:
+            sentiment_label = "neutral"
+
         event = RawEvent(
             platform=platform,
-            external_id=external_id,
-            author_id=author_id,
-            author_name=author_name,
+            platform_event_id=external_id or f"generated-{datetime.now(timezone.utc).timestamp()}",
             text=text,
-            created_at=created_at,
-            sentiment=result["label"],
-            sentiment_score=result["score"],
-            event_metadata=event_metadata or {},
+            author_id=author_id,
+            author_handle=author_name,
+            created_at=created_at or datetime.now(timezone.utc),
+            sentiment=sentiment_label,
+            sentiment_dominant=dominant,
+            raw_metadata=event_metadata or {},
         )
+        event.compute_hash()
         self.session.add(event)
         self.session.commit()
         self.session.refresh(event)

@@ -2,6 +2,7 @@ import unittest
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from src.core import SyntraCore
 from src.storage.db import Base
@@ -10,7 +11,11 @@ from src.storage.models import RawEvent
 
 class SyntraCoreTests(unittest.TestCase):
     def setUp(self) -> None:
-        engine = create_engine("sqlite:///:memory:")
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
         Base.metadata.create_all(engine)
         self.session = sessionmaker(bind=engine)()
         self.core = SyntraCore(self.session)

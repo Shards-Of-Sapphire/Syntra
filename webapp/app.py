@@ -27,13 +27,13 @@ def serialize_event(event):
     return {
         "id": event.id,
         "platform": event.platform,
-        "external_id": event.external_id,
-        "author_name": event.author_name,
+        "platform_event_id": event.platform_event_id,
+        "author_handle": event.author_handle,
         "text": event.text,
         "created_at": event.created_at.isoformat() if event.created_at else None,
         "sentiment": event.sentiment,
-        "sentiment_score": event.sentiment_score,
-        "metadata": event.event_metadata or {},
+        "sentiment_dominant": event.sentiment_dominant,
+        "metadata": event.raw_metadata or {},
     }
 
 @app.route('/')
@@ -64,17 +64,17 @@ def create_event():
         event = SyntraCore(session).ingest_event(
             platform=data.get('platform', ''),
             text=data.get('text', ''),
-            external_id=data.get('external_id'),
+            external_id=data.get('external_id') or data.get('platform_event_id'),
             author_id=data.get('author_id'),
-            author_name=data.get('author_name'),
-            event_metadata=data.get('metadata'),
+            author_name=data.get('author_name') or data.get('author_handle'),
+            event_metadata=data.get('metadata') or data.get('raw_metadata'),
         )
         return jsonify({
             "id": event.id,
             "platform": event.platform,
             "text": event.text,
             "sentiment": event.sentiment,
-            "sentiment_score": event.sentiment_score,
+            "sentiment_dominant": event.sentiment_dominant,
         }), 201
     except ValueError as error:
         session.rollback()
