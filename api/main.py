@@ -1,8 +1,10 @@
 # api/main.py
 
 from contextlib import asynccontextmanager
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+import re
 from typing import Optional, List
-from datetime import datetime, timezone
 import logging
 
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -83,6 +85,141 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+
+def _range_start(value: str) -> datetime:
+    days = {"24h": 1, "7d": 7, "30d": 30, "90d": 90}.get(value, 1)
+    return datetime.now(timezone.utc) - timedelta(days=days)
+
+
+def _filtered_events(db: Session, range_name: str = "24h") -> list[RawEvent]:
+    start = _range_start(range_name)
+    return (
+        db.query(RawEvent)
+        .filter(RawEvent.created_at >= start)
+        .order_by(desc(RawEvent.created_at))
+        .all()
+    )
+
+
+def _sentiment_label(event: RawEvent) -> str:
+    if isinstance(event.sentiment, str):
+        return event.sentiment
+    dominant = event.sentiment_dominant or "neutral"
+    if dominant in {"joy", "surprise"}:
+        return "positive"
+    if dominant in {"sadness", "anger", "fear", "disgust"}:
+        return "negative"
+    return "neutral"
+
+
+def _sentiment_score(event: RawEvent) -> int:
+    return {"positive": 85, "neutral": 50, "negative": 20}.get(
+        _sentiment_label(event), 50
+    )
+
+
+@app.get("/health")
+async def compatibility_health():
+    return await health()
+
+
+@app.get("/api/metrics")
+async def compatibility_metrics(range: str = Query("24h"), db: Session = Depends(get_db)):
+    events = _filtered_events(db, range)
+    total = len(events)
+    positive = sum(_sentiment_label(event) == "positive" for event in events)
+    mood = round(sum(_sentiment_score(event) for event in events) / total, 1) if total else 0
+    counts = Counter(_sentiment_label(event) for event in events)
+    trend_data = [counts.get(label, 0) for label in ("positive", "neutral", "negative")]
+    return [
+        {
+            "id": "mentions", "label": "TOTAL MENTIONS", "value": total,
+            "displayFormat": "compact", "changePercent": 0, "changeType": "neutral",
+            "subtext": f"{total} imported events", "trendData": trend_data,
+        },
+        {
+            "id": "sentiment", "label": "AUDIENCE MOOD (SENTIMENT)", "value": mood,
+            "suffix": "%", "displayFormat": "decimal", "changePercent": 0,
+            "changeType": "neutral", "subtext": f"{positive} positive events",
+            "trendData": [_sentiment_score(event) for event in events[-12:]],
+        },
+        {
+            "id": "trend", "label": "TOP TRENDING TOPIC", "value": 0,
+            "prefix": "#", "suffix": " mentions", "displayFormat": "number",
+            "changePercent": 0, "changeType": "neutral", "subtext": "Derived from imported text",
+            "trendData": [event.id for event in events[-12:]],
+        },
+        {
+            "id": "voices", "label": "INFLUENCERS TALKING",
+            "value": len({event.author_id for event in events if event.author_id}),
+            "displayFormat": "compact", "changePercent": 0, "changeType": "neutral",
+            "subtext": "Unique imported authors", "trendData": trend_data,
+        },
+    ]
+
+
+@app.get("/api/sentiment")
+async def compatibility_sentiment(
+    range: str = Query("24h"), db: Session = Depends(get_db)
+):
+    events = _filtered_events(db, range)
+    buckets: dict[str, list[RawEvent]] = {}
+    for event in events:
+        created = event.created_at
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        bucket = created.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
+        buckets.setdefault(bucket.isoformat(), []).append(event)
+
+    points = []
+    for timestamp, bucket_events in sorted(buckets.items()):
+        count = len(bucket_events)
+        positive = round(100 * sum(_sentiment_label(e) == "positive" for e in bucket_events) / count)
+        negative = round(100 * sum(_sentiment_label(e) == "negative" for e in bucket_events) / count)
+        neutral = max(0, 100 - positive - negative)
+        points.append({
+            "timestamp": timestamp, "positive": positive, "neutral": neutral,
+            "negative": negative, "netScore": round(sum(_sentiment_score(e) for e in bucket_events) / count),
+            "volume": count,
+        })
+    return points
+
+
+@app.get("/api/trends")
+async def compatibility_trends(range: str = Query("24h"), db: Session = Depends(get_db)):
+    words = Counter(
+        word.lower()
+        for event in _filtered_events(db, range)
+        for word in re.findall(r"[A-Za-z][A-Za-z0-9_-]{3,}", event.text)
+        if word.lower() not in {"this", "that", "with", "from", "have", "your"}
+    )
+    return [
+        {
+            "id": f"trend-{index}", "rank": index, "name": name,
+            "category": "Imported text", "mentions": mentions, "changePercent": 0,
+            "sentiment": "neutral", "sentimentScore": 50, "velocity": "moderate",
+        }
+        for index, (name, mentions) in enumerate(words.most_common(10), start=1)
+    ]
+
+
+@app.get("/api/feed")
+async def compatibility_feed(range: str = Query("24h"), db: Session = Depends(get_db)):
+    feed = []
+    for event in _filtered_events(db, range):
+        metrics = event.raw_metadata.get("public_metrics", {}) if event.raw_metadata else {}
+        likes = int(metrics.get("like_count", 0))
+        reposts = int(metrics.get("retweet_count", 0))
+        feed.append({
+            "id": str(event.id), "author": event.author_handle or event.author_id or "Unknown",
+            "handle": event.author_handle or "", "avatar": "", "verified": False,
+            "platform": event.platform, "content": event.text,
+            "timestamp": event.created_at.isoformat(), "sentiment": _sentiment_label(event),
+            "sentimentScore": _sentiment_score(event), "likes": likes, "reposts": reposts,
+            "engagementScore": min(10, round((likes + reposts) / 10, 1)),
+        })
+    return feed
 
 # ─────────────────────────────────────────────
 # Endpoints

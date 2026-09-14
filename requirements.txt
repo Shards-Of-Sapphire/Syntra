@@ -13,6 +13,7 @@ fastapi-cache2==0.2.2
 uvicorn==0.30.1
 streamlit==1.36.0
 sqlalchemy==2.0.31
+psycopg[binary]>=3.2.10,<3.3
 python-dotenv==1.0.1
 python-multipart==0.0.9
 flask==3.0.3

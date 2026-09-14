@@ -9,13 +9,12 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 
 def get_database_url() -> str:
-    """Return the configured database URL, defaulting to a local SQLite file."""
+    """Return the configured database URL, defaulting to local PostgreSQL."""
     configured = os.getenv("DATABASE_URL")
     if configured:
         return configured
 
-    default_path = (PROJECT_ROOT / "data" / "timeline.db").resolve()
-    return f"sqlite:///{default_path.as_posix()}"
+    return "postgresql+psycopg://syntra:syntra@localhost:5432/syntra"
 
 
 DATABASE_URL = get_database_url()

@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: syntra-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: syntra
+      POSTGRES_USER: syntra
+      POSTGRES_PASSWORD: syntra
+    ports:
+      - "5432:5432"
+    volumes:
+      - syntra-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  syntra-postgres-data:
