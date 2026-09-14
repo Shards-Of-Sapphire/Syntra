@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode selector in Tailwind CSS v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Specified Palette */
+    --color-primary: #6C63FF;
+    --color-primary-hover: #5B52EE;
+    --color-teal: #14B8A6;
+    --color-coral: #F97362;
+    --color-amber: #F5B942;
+
+    /* ── Light Mode Gradient Tokens ── */
+    --bg-app: #F3F1FC;
+    --bg-gradient: linear-gradient(135deg, #F3F1FC 0%, #EBEFFB 50%, #E4EEFA 100%);
+    --bg-card: #FFFFFF;
+    --card-gradient: linear-gradient(160deg, #FFFFFF 0%, #F6F4FE 100%);
+    --card-border: #E9E7F7;
+    --border-subtle: #E9E7F7;
+    --accent-glow: radial-gradient(circle, rgba(139,124,255,0.18) 0%, transparent 70%);
+    --btn-primary-gradient: linear-gradient(135deg, #8B7CFF 0%, #5CC7C0 100%);
+    --text-body: #1C1C28;
+    --text-muted: #5C5A80;
+    --text-subtle: #8280A0;
+    --text-secondary: #5C5A80;
+  }
+
+  .dark {
+    /* ── Dark Mode Gradient Tokens ── */
+    --bg-app: #0C0E1C;
+    --bg-gradient: linear-gradient(135deg, #0C0E1C 0%, #161A33 50%, #1E2247 100%);
+    --bg-card: #12142A;
+    --card-gradient: linear-gradient(160deg, #12142A 0%, #1B1E3C 100%);
+    --card-border: rgba(140,130,255,0.15);
+    --border-subtle: rgba(140,130,255,0.15);
+    --accent-glow: radial-gradient(circle, rgba(91,107,255,0.22) 0%, transparent 70%);
+    --btn-primary-gradient: linear-gradient(135deg, #8B7CFF 0%, #5CC7C0 100%);
+    --text-body: #EDEDF5;
+    --text-muted: #9D9DAE;
+    --text-subtle: #6A697E;
+    --text-secondary: #9D9DAE;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text-body);
+    min-height: 100vh;
+    transition: color 0.25s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ── Gradient surface utilities ── */
+.card-surface {
+  background: var(--card-gradient);
+  border-color: var(--card-border);
+}
+
+.accent-glow {
+  background: var(--accent-glow);
+}
+
+.btn-primary-gradient {
+  background: var(--btn-primary-gradient);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-numbers {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom minimal scrollbar with violet tint */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(142, 137, 180, 0.28);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 99, 255, 0.45);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(85, 83, 115, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(108, 99, 255, 0.6);
+}
+
+/* ==========================================================================
+   Cool Animation Keyframes & Gradient Utilities
+   ========================================================================== */
+
+@keyframes radarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes streamDash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes shimmerFlow {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-radar-sweep {
+  animation: radarSweep 4s linear infinite;
+  transform-origin: center;
+}
+
+.animate-stream-dash {
+  animation: streamDash 1.2s linear infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+}
+
+.glow-violet {
+  box-shadow: 0 0 25px -4px rgba(108, 99, 255, 0.35);
+}
+
+.glow-teal {
+  box-shadow: 0 0 25px -4px rgba(20, 184, 166, 0.35);
+}
