@@ -133,45 +133,183 @@ Syntra features an automated dual-mode data service:
 ## 🚀 Getting Started
 
 ### Prerequisites
-* **Node.js** (v18.0 or newer)
-* **npm** or **bun** / **yarn** / **pnpm**
+* **Python 3.10+**
+* **Node.js 18+** (or 20 LTS recommended)
+* **npm**
+* **Docker Desktop / Docker Engine + Docker Compose** for the local PostgreSQL service
 
-### 1. Clone & Install Dependencies
+### 1. Clone the repository
 ```bash
 git clone <repository-url>
-cd syntra_revised
+cd Syntra
+```
+
+### 2. Create and activate a Python environment
+```bash
+python -m venv .venv
+```
+On macOS / Linux:
+```bash
+source .venv/bin/activate
+```
+On Windows PowerShell:
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+### 3. Install Python dependencies
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 4. Install frontend dependencies
+```bash
 npm install
 ```
-
-### 2. Configure Environment (Optional)
-If you wish to use Gemini AI Studio features directly:
+If you are working from the bundled Next.js app under `webapp/` instead of the root Vite app, install separately:
 ```bash
-cp .env.example .env.local
-# Set your GEMINI_API_KEY inside .env.local
+cd webapp
+npm install
+cd ..
 ```
 
-### 3. Run the Development Server
+### 5. Configure environment variables (optional)
+If you want to plug in external credentials or API tokens, copy the example file when available and fill in values:
+```bash
+cp .env.example .env.local
+```
+Then set any needed keys, such as GEMINI API credentials or social platform secrets, in the file.
+
+### 6. Start the backend service
+The Python Flask API is the backend entry point for ingestion and summary endpoints:
+```bash
+python webapp/app.py
+```
+The API is available at:
+```text
+http://localhost:5000
+```
+Health check:
+```bash
+curl http://localhost:5000/api/health
+```
+
+### 7. Start the frontend development server
+From the repository root:
 ```bash
 npm run dev
 ```
-The application will be live at:
-```
+The app will be available at:
+```text
 http://localhost:3000
 ```
+If you want to use the dedicated Next.js app under `webapp/`:
+```bash
+cd webapp
+npm run dev
+```
 
-### 4. Build for Production
+### 8. Optional: use the project Makefile shortcuts
+```bash
+make install
+make run
+make run-backend
+make run-frontend
+make test
+```
+
+### 9. Run tests
+This repository uses both `unittest` and `pytest` conventions depending on the module:
+```bash
+python -m pytest
+```
+Or the project helper:
+```bash
+make test
+```
+
+### 10. Lint and type-check the frontend
+```bash
+npm run lint
+```
+
+### 11. Build for production
 ```bash
 npm run build
 ```
-Preview the production build:
+Preview the production build locally:
 ```bash
 npm run preview
 ```
 
-### 5. Type-Checking & Linting
+---
+
+## 🐳 Dockerized Deployment & Local Database Test
+
+The repository includes a Docker Compose file for the PostgreSQL database used by the app. This is the recommended way to bring up the storage layer for local development or a smoke-test deployment. The app itself is not wrapped in a single container image yet, so the Docker flow is currently focused on the database service and validating that the application can connect and run with it.
+
+### 1. Start the database container
 ```bash
-npm run lint
+docker compose up -d
 ```
+This starts the Postgres instance defined in `docker-compose.yml` and exposes it on:
+```text
+localhost:5432
+```
+
+### 2. Verify the container is running
+```bash
+docker compose ps
+```
+You should see a `syntra-postgres` container in the `Up` state.
+
+### 3. Validate Postgres is accepting connections
+```bash
+pg_isready -h localhost -p 5432 -U syntra
+```
+If you do not have `pg_isready` installed locally, use a simple container-level check:
+```bash
+docker logs syntra-postgres
+```
+
+### 4. Smoke-test the web app against the Docker-backed database
+Start the backend after the database is up:
+```bash
+python webapp/app.py
+```
+Then check the app health endpoint:
+```bash
+curl http://localhost:5000/api/health
+```
+You can also exercise the analytics API after writing a test record:
+```bash
+curl -X POST http://localhost:5000/api/events \
+  -H "Content-Type: application/json" \
+  -d '{"platform":"twitter","text":"Docker smoke test for Syntra","metadata":{"source":"docker-check"}}'
+```
+And then fetch the summary:
+```bash
+curl http://localhost:5000/api/summary
+```
+
+### 5. Stop and clean up the Docker environment
+```bash
+docker compose down
+```
+To also remove the persistent database volume:
+```bash
+docker compose down -v
+```
+
+### 6. Docker-first local workflow summary
+```bash
+docker compose up -d
+python webapp/app.py
+npm run dev
+python -m pytest
+```
+This gives a repeatable setup for local development with a real Postgres instance while still allowing the frontend and backend to run in the normal host environment.
 
 ---
 
